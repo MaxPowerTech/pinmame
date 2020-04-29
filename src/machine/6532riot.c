@@ -10,6 +10,7 @@
 #include <string.h>
 #include <stdio.h>
 #include "driver.h"
+#include "timer.h"
 #include "6532riot.h"
 
 #define VERBOSE 0
@@ -53,7 +54,7 @@ struct riot6532
 	UINT8 irq_state;
 	UINT8 irq;
 
-	void *t;
+	mame_timer *t;
 	double time;
 
 	double cycles_to_sec;
@@ -289,7 +290,7 @@ int riot6532_read(int which, int offset)
 
 			if ( old_timer_enabled ) {
 				if ( p->irq_state & RIOT_TIMERIRQ ) {
-					val = 255 - V_TIME_TO_CYCLES(timer_get_time() - p->time);
+					val = 254 - V_TIME_TO_CYCLES(timer_get_time() - p->time); // 254 is indicated by the s80btest
 				}
 				else
 					val = p->timer_start - V_TIME_TO_CYCLES(timer_get_time() - p->time) / p->timer_divider;

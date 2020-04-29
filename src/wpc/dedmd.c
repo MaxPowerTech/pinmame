@@ -123,6 +123,7 @@ static WRITE_HANDLER(dmd32_status_w) {
 static WRITE_HANDLER(dmd32_bank_w) {
   cpu_setbank(DMD32_BANK0, dmdlocals.brdData.romRegion + (data & 0x1f)*0x4000);
 }
+
 static READ_HANDLER(dmd32_latch_r) {
   sndbrd_data_cb(dmdlocals.brdData.boardNo, dmdlocals.busy = 0); // Clear Busy
   cpu_set_irq_line(dmdlocals.brdData.cpuNo, M6809_IRQ_LINE, CLEAR_LINE);
@@ -136,7 +137,6 @@ static INTERRUPT_GEN(dmd32_firq) {
 PINMAME_VIDEO_UPDATE(dedmd32_update) {
   const UINT8 *RAM  = ((UINT8 *)dmd32RAM) + ((crtc6845_start_address_r(0) & 0x0100)<<2);
   const UINT8 *RAM2 = RAM + 0x200;
-  tDMDDot dotCol;
   int ii;
 
 #ifdef PROC_SUPPORT
@@ -165,7 +165,7 @@ PINMAME_VIDEO_UPDATE(dedmd32_update) {
 #endif
 
   for (ii = 1; ii <= 32; ii++) {
-    UINT8 *line = &dotCol[ii][0];
+    UINT8 *line = &coreGlobals.dotCol[ii][0];
     int jj;
     for (jj = 0; jj < (128/8); jj++) {
       const UINT8 intens1 = 2*(*RAM & 0x55) + (*RAM2 & 0x55);
@@ -183,7 +183,7 @@ PINMAME_VIDEO_UPDATE(dedmd32_update) {
     *line = 0;
   }
 
-  video_update_core_dmd(bitmap, cliprect, dotCol, layout);
+  video_update_core_dmd(bitmap, cliprect, layout);
   return 0;
 }
 
@@ -265,11 +265,10 @@ static READ16_HANDLER(crtc6845_msb_register_r)  { return crtc6845_register_0_r(o
 PINMAME_VIDEO_UPDATE(dedmd64_update) {
   const UINT8 *RAM  = (UINT8 *)(dmd64RAM) + ((crtc6845_start_address_r(0) & 0x400)<<2);
   const UINT8 *RAM2 = RAM + 0x800;
-  tDMDDot dotCol;
   int ii;
 
   for (ii = 1; ii <= 64; ii++) {
-    UINT8 *line = &dotCol[ii][0];
+    UINT8 *line = &coreGlobals.dotCol[ii][0];
     int jj;
     for (jj = 0; jj < (192/16); jj++) {
       const UINT8 intens1 = 2*(RAM[1] & 0x55) + (RAM2[1] & 0x55);
@@ -296,7 +295,7 @@ PINMAME_VIDEO_UPDATE(dedmd64_update) {
     }
     *line = 0;
   }
-  video_update_core_dmd(bitmap, cliprect, dotCol, layout);
+  video_update_core_dmd(bitmap, cliprect, layout);
   return 0;
 }
 
@@ -365,6 +364,7 @@ static void dmd16_init(struct sndbrdData *brdData) {
   dmd16_setbank(0x07, 0x07);
   dmd16_setbusy(BUSY_SET|BUSY_CLR,0);
 }
+
 /*--- Port decoding ----
   76543210
   10-001-- Bank0 (stat)
@@ -379,8 +379,8 @@ static void dmd16_init(struct sndbrdData *brdData) {
   11-101-- Row Clock (stat)
   0----1-- CLATCH (mom)
   0----0-- COCLK (mom)
-
 --------------------*/
+
 static READ_HANDLER(dmd16_port_r) {
   if ((offset & 0x84) == 0x80) {
     dmd16_setbusy(BUSY_CLR, 0); dmd16_setbusy(BUSY_CLR,1);
@@ -442,7 +442,7 @@ static WRITE_HANDLER(dmd16_port_w) {
         case 0xcc: // Row data
           dmdlocals.rowdata = data; break;
         case 0xd4: // Row clock
-          if (~data & dmdlocals.rowclk) // negative edge;
+          if (~data & dmdlocals.rowclk) // negative edge
             dmdlocals.hv5222 = (dmdlocals.hv5222<<1) | (dmdlocals.rowdata);
           dmdlocals.rowclk = data;
           break;
@@ -469,7 +469,7 @@ static WRITE_HANDLER(dmd16_ctrl_w) {
 
 static void dmd16_setbusy(int bit, int value) {
   static int laststat = 0;
-  int newstat = (laststat & ~bit) | (value ? bit : 0);
+  const int newstat = (laststat & ~bit) | (value ? bit : 0);
 #if 1
   /* In the data-sheet for the HC74 flip-flop is says that SET & CLR are _not_
      edge triggered. For some strange reason, the DMD doesn't work unless we
@@ -505,11 +505,10 @@ static INTERRUPT_GEN(dmd16_nmi) { cpu_set_nmi_line(dmdlocals.brdData.cpuNo, PULS
 /*-- update display --*/
 PINMAME_VIDEO_UPDATE(dedmd16_update) {
   const UINT32 *frame = &dmdlocals.framedata[(!dmdlocals.frame)*0x80];
-  tDMDDot dotCol;
   int ii;
 
   for (ii = 1; ii <= 16; ii++) {
-    UINT8 *line = &dotCol[ii][0];
+    UINT8 *line = &coreGlobals.dotCol[ii][0];
     int jj;
     for (jj = 0; jj < 2; jj++) {
       UINT32 tmp0 = frame[0];
@@ -527,6 +526,6 @@ PINMAME_VIDEO_UPDATE(dedmd16_update) {
     }
     *line++ = 0;
   }
-  video_update_core_dmd(bitmap, cliprect, dotCol, layout);
+  video_update_core_dmd(bitmap, cliprect, layout);
   return 0;
 }

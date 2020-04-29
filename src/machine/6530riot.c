@@ -9,6 +9,7 @@
 
 #include <string.h>
 #include <stdio.h>
+#include "timer.h"
 #include "driver.h"
 #include "6530riot.h"
 
@@ -40,11 +41,11 @@ struct riot6530
 	UINT8 timer_start;
 	UINT16 timer_divider;
 	UINT8 timer_irq_enabled;
-  
+
 	UINT8 irq_state;
 	UINT8 irq;
 
-	void *t;
+	mame_timer *t;
 	double time;
 
 	double cycles_to_sec;
@@ -269,7 +270,7 @@ int riot6530_read(int which, int offset)
 
 			if ( old_timer_enabled ) {
 				if ( p->irq_state & RIOT_TIMERIRQ ) {
-					val = 255 - V_TIME_TO_CYCLES(timer_get_time() - p->time);
+					val = 254 - V_TIME_TO_CYCLES(timer_get_time() - p->time); // 254 is indicated by the s80btest
 				}
 				else
 					val = p->timer_start - V_TIME_TO_CYCLES(timer_get_time() - p->time) / p->timer_divider;

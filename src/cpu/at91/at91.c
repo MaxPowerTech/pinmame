@@ -89,7 +89,7 @@ INLINE data32_t at91_cpu_read32( int addr );
 INLINE data16_t at91_cpu_read16( int addr );
 INLINE data8_t at91_cpu_read8( int addr );
 void at91_fire_irq(int irqline);
-void at91_irq_assert_if_greater();
+void at91_irq_assert_if_greater(void);
 void (*at91_transmit_serial)(int usartno, data8_t *data, int size) = NULL;
 void (*at91_serial_receive_ready)(int usartno) = NULL;
 
@@ -374,7 +374,7 @@ char *GetUARTOffset(int addr)
 	return temp;
 }
 
-void at91_build_priority_map()
+void at91_build_priority_map(void)
 {
 	int i, c=0, j;
 
@@ -414,7 +414,7 @@ mame_timer* at91_serial_timer=NULL;
 
 static void serial_timer_event(int timer_num);
 
-void at91_irqcheck()
+void at91_irqcheck(void)
 {
 	arm7_check_irq_state();
 }
@@ -634,7 +634,7 @@ INLINE void internal_write (int addr, data32_t data)
 			//EBI - External Bus Interface
 			else
 			{
-				switch(addr)
+				switch((UINT32)addr)
 				{
 					//EBI_CSR0 - EBI_CSR7
 					case 0xffe00000:
@@ -1737,7 +1737,7 @@ void at91_set_nmi_line(int state)
 {
 }
 
-void at91_irq_assert_if_greater()
+void at91_irq_assert_if_greater(void)
 {
 	if (at91.aic_irqstatus > 0)
 	{
@@ -1790,26 +1790,26 @@ void at91_set_irq_callback(int (*callback)(int irqline))
 
 static const data8_t at91_reg_layout[] =
 {
-	-1,
-	ARM732_R0,  ARM732_IR13, -1,
-	ARM732_R1,  ARM732_IR14, -1,
-	ARM732_R2,  ARM732_ISPSR, -1,
-	ARM732_R3,  -1,
-	ARM732_R4,  ARM732_FR8,  -1,
-	ARM732_R5,  ARM732_FR9,  -1,
-	ARM732_R6,  ARM732_FR10, -1,
-	ARM732_R7,  ARM732_FR11, -1,
-	ARM732_R8,  ARM732_FR12, -1,
-	ARM732_R9,  ARM732_FR13, -1,
-	ARM732_R10, ARM732_FR14, -1,
-	ARM732_R11, ARM732_FSPSR, -1,
-	ARM732_R12, -1,
-	ARM732_R13, ARM732_AR13, -1,
-	ARM732_R14, ARM732_AR14, -1,
-	ARM732_R15, ARM732_ASPSR, -1,
-	-1,
-	ARM732_SR13, ARM732_UR13, -1,
-	ARM732_SR14, ARM732_UR14, -1,
+	0xFF,
+	ARM732_R0,  ARM732_IR13, 0xFF,
+	ARM732_R1,  ARM732_IR14, 0xFF,
+	ARM732_R2,  ARM732_ISPSR, 0xFF,
+	ARM732_R3,  0xFF,
+	ARM732_R4,  ARM732_FR8,  0xFF,
+	ARM732_R5,  ARM732_FR9,  0xFF,
+	ARM732_R6,  ARM732_FR10, 0xFF,
+	ARM732_R7,  ARM732_FR11, 0xFF,
+	ARM732_R8,  ARM732_FR12, 0xFF,
+	ARM732_R9,  ARM732_FR13, 0xFF,
+	ARM732_R10, ARM732_FR14, 0xFF,
+	ARM732_R11, ARM732_FSPSR, 0xFF,
+	ARM732_R12, 0xFF,
+	ARM732_R13, ARM732_AR13, 0xFF,
+	ARM732_R14, ARM732_AR14, 0xFF,
+	ARM732_R15, ARM732_ASPSR, 0xFF,
+	0xFF,
+	ARM732_SR13, ARM732_UR13, 0xFF,
+	ARM732_SR14, ARM732_UR14, 0xFF,
 	ARM732_SSPSR, ARM732_USPSR, 0
 };
 

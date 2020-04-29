@@ -33,7 +33,7 @@ filter* filter_lp_fir_alloc(double freq, const int order);
 void filter_free(filter* f);
 
 /* Allocate a filter state */
-filter_state* filter_state_alloc();
+filter_state* filter_state_alloc(void);
 /* Free the filter state */
 void filter_state_free(filter_state* s);
 
@@ -53,16 +53,6 @@ INLINE void filter_insert(const filter* f, filter_state* s, const float x) {
 
 /* Compute the filter output */
 float filter_compute(const filter* f, const filter_state* s);
-
-INLINE INT16 filter_compute_clamp16(const filter* f, const filter_state* s) {
-	const float tmp = filter_compute(f, s);
-	if (tmp <= -32768.f)
-		return -32768;
-	else if (tmp >= 32767.f)
-		return 32767;
-	else
-		return (INT16)tmp;
-}
 
 //
 // The following IIR filter is much lower computational overhead, but is more restricted to what can be done with filters that are based on it
@@ -118,7 +108,7 @@ void filter_setup(const double b0, const double b1, const double b2, const doubl
 	filter2_context * const __restrict filter2);
 
 
-/* Setup a filter2 structure based on an op-amp multipole bandpass circuit.
+/* Set up a filter2 structure based on an op-amp multipole bandpass circuit.
  * NOTE: If r2 is not used then set to 0.
  *       vRef is not needed to setup filter.
  *
@@ -138,6 +128,19 @@ void filter_setup(const double b0, const double b1, const double b2, const doubl
  */
 void filter_opamp_m_bandpass_setup(const double r1, const double r2, const double r3, const double c1, const double c2,
 					filter2_context * const __restrict filter2, const unsigned int sample_rate);
+
+// 
+// Passive RC low-pass filter (set R2 & R3 = 0 for first variant)
+//
+//
+// Vin --- R1 --- + --- Vout   or    Vin --- R1 --- + --- R2 --- +
+//                |                                 |            |
+//                C1                                C1           R3 --- Vout
+//                |                                 |            |
+//               GND                               GND          GND
+//
+void filter_rc_lp_setup(const double R1, const double R2, const double R3, const double C1,
+	filter2_context * const __restrict context, const int sample_rate);
 
 
 // Multiple Feedback Low-pass Filter
